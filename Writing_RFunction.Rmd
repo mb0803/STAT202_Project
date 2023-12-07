@@ -1,0 +1,161 @@
+---
+title: "Writing Functions in R"
+author: "Munguldei Batsaikhan"
+date: "December 4, 2023"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+## 1. What is a Function?
+
+A function in R is an object containing multiple interrelated statements that are run together in a predefined order every time the function is called. Functions in R can be built-in or user-defined. The main purpose of creating a user-defined function is to optimize a program, avoid repetition of code and make the code more readable.
+
+## 2. Built-in Functions
+
+* Numeric Manipulation: abs, sqrt, ceiling, floor
+* Basic stats: mean, median, sd, cor, quantile
+* Probability functions:
+  * Density functions (ddist): dnorm, dbinom, dpois, dunif
+  * Cumulative distribution functions (pdist): pnorm, pbinom, ppois, punif
+  * Quantile functions (qdist): qnorm, qbinom, qpois, qunif
+  * Random numbers (rdist) : rnorm, rbinom, rpois, runif
+
+## 3. Creating Your Own Functions
+
+To make a user-defined function in R, follow this structure,
+
+```{r, eval=F, echo=T}
+function_name <- function(parameters){
+  function body 
+}
+```
+
+
+## 4. Function Examples
+
+Starting off simple with no parameters,
+```{r}
+done<-function(){
+  print("Yaay, you finished a task!")
+}
+```
+ 
+Calling your very first function!
+```{r}
+done()
+```
+
+
+Now, let's include parameters for a more interesting function,
+```{r}
+#zazz it up with parameters
+encourage<-function(n=1){
+  quotes<-read.csv("~/stat202/CW/present/quotes.csv")
+  selected<-sample_n(quotes, n)
+  
+  #simple print
+  for (i in 1:n) {
+    print(selected$quote[i])
+  }
+}
+```
+
+Calling your very first functions with parameters!
+```{r}
+encourage(2)
+```
+
+We can make our function even more sophisticated by adding more parameters,
+```{r}
+#want something more relevantly inspiring?
+encourage2<-function(n=1, key="friendship"){
+  quotes<-read.csv("~/stat202/CW/present/quotes.csv")
+  
+  selected<-c()
+  for (j in 1:nrow(quotes)) {
+    category<-quotes$category[j]
+    if (grepl(key, category)) {
+      selected<-append(selected, j)
+    }
+  }
+  
+  #if we have desired quotes, random select from found quotes
+  if (n > length(selected)) {
+      print("Not enough quotes for key theme.")
+  }
+  selected<-sample(selected, n)
+  print(quotes$quote[selected])
+}
+```
+
+Running improved `encourage`,
+```{r}
+encourage2()
+```
+
+```{r}
+encourage2(key="love")
+```
+
+
+## 5. Are Functions Useful?
+
+Absolutely! It saves us the trouble of repetition, ugly code and future debugging issues. Observe that some of the action we performed in R could have been made into functions.
+
+Loading in data set to test function,
+```{r}
+mb34<-read.csv("~/stat202/CW/midterm/mb34.csv")
+mb34<-mb34[,c('SalePrice', 'Bedrooms', 'SquareFeet', 'YearSold', 'YearBuilt')]
+mb34$SalePrice<-mb34$SalePrice/1000
+lm.price<-lm(SalePrice~Bedrooms+SquareFeet+YearSold+YearBuilt, data=mb34)
+
+```
+
+Function to make model diagnostics easier,
+```{r}
+#function to check model diagnostics
+#pre: df - data frame that contains all predictor variables ONLY included in the lm.obj,
+#lm.obj - lm object that was created from df
+diagnose<-function(df, lm.obj) {
+  df<-na.omit(df)
+  par(mfrow=c(2,3))
+  #Residual plot for predicted values (for overall linearity)
+  plot(lm.obj$fitted.values, lm.obj$residuals, ylab="Residual", xlab="Predicted",
+  pch=19, cex.main=0.8, main="Residuals versus Predicted Y")
+  abline(h=0, lty=2, lwd=2, col="blue")
+
+  #Residual plot for predictor variables (for each predictor linearity)
+  for (var in all.vars(formula(lm.obj))) {
+    predictor=df[,var]
+    plot(predictor, lm.obj$residuals, ylab="Residual", xlab=var,
+    pch=19, cex.main=0.8, main=paste("Residuals versus", var))
+    abline(h=0, lty=2, lwd=2, col="blue")
+  }
+  
+  par(mfrow=c(1,2))
+  #Histogram of residuals
+  hist(lm.obj$residuals, xlab="Residuals", 
+       cex.main=0.8, main="Histogram of Residuals")
+
+  #Normal QQ Plot
+  qqnorm(lm.obj$residuals)
+  qqline(lm.obj$residuals)
+}
+```
+
+```{r}
+diagnose(mb34, lm.price)
+```
+
+## 6. Sources
+* https://www.kaggle.com/datasets/manann/quotes-500k/
+* https://ashki23.github.io/r-functions.html
+* https://www.statmethods.net/management/functions.html
+* https://www.dataquest.io/blog/write-functions-in-r/
