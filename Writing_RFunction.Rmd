@@ -132,11 +132,14 @@ diagnose<-function(df, lm.obj) {
   abline(h=0, lty=2, lwd=2, col="blue")
 
   #Residual plot for predictor variables (for each predictor linearity)
-  for (var in all.vars(formula(lm.obj))) {
+  vars = all.vars(formula(lm.obj))[-1]
+  for (var in vars) {
     predictor=df[,var]
-    plot(predictor, lm.obj$residuals, ylab="Residual", xlab=var,
-    pch=19, cex.main=0.8, main=paste("Residuals versus", var))
-    abline(h=0, lty=2, lwd=2, col="blue")
+    if (is.numeric(predictor)) {
+      plot(predictor, lm.obj$residuals, ylab="Residual", xlab=var, pch=19, cex.main=0.8, main=paste("Residuals versus", var)) 
+      abline(h=0, lty=2, lwd=2, col="blue")
+      }
+    next
   }
   
   par(mfrow=c(1,2))
